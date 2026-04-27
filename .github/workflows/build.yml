@@ -1,0 +1,47 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Compute version tag (YYYYMMDD.NN)
+        id: ver
+        run: |
+          DATE=$(date -u +%Y%m%d)
+          # count today's runs (ourselves included = 1)
+          COUNT=$(gh run list --workflow=build.yml --limit 100 --json createdAt -q '[.[] | select(.createdAt | startswith("'"$(date -u +%Y-%m-%d)"'"))] | length' 2>/dev/null || echo 0)
+          NN=$(printf '%02d' $COUNT)
+          echo "tag=${DATE}.${NN}" >> $GITHUB_OUTPUT
+          echo "Built tag: ${DATE}.${NN}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ghcr.io/smartfabrik/embedding:${{ steps.ver.outputs.tag }}
+            ghcr.io/smartfabrik/embedding:latest
+          build-args: |
+            VERSION=${{ steps.ver.outputs.tag }}
+            GIT_COMMIT_SHA=${{ github.sha }}
