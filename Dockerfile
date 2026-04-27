@@ -16,6 +16,7 @@ RUN pip install --no-cache-dir \
 
 COPY embedding_indexer.py /app/embedding_indexer.py
 COPY embedding_search_api.py /app/embedding_search_api.py
+COPY cross_sell_aggregator.py /app/cross_sell_aggregator.py
 
 ENV PYTHONUNBUFFERED=1
 
