@@ -151,8 +151,12 @@ def build_text(row) -> Tuple[str, dict]:
     content_excerpt = html_to_text(content, 400)
     desc = excerpt or content_excerpt or ""
 
+    # Title 3x prepended for stronger weight in vector signal — empirisch
+    # vector-search ranking hängt stark an Title-Match.
     parts = [
         f"Titel: {title}",
+        f"Produkt: {title}",
+        f"Suche: {title}",
         f"Marke: {brand_names}" if brand_names else "",
         f"Kategorien: {cat_names}" if cat_names else "",
         f"Artikelnummer: {mpn}" if mpn else "",
