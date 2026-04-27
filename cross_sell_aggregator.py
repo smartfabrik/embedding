@@ -42,13 +42,24 @@ from math import log
 
 import pymysql
 
-DB = {
-    "user": os.environ.get("DB_USER", "shop_live"),
-    "password": os.environ.get("DB_PASSWORD", "1zL0blWZYjPhaQcWAKwAnNmUn45iqWQA"),
-    "unix_socket": "/run/mysqld/mysqld.sock",
-    "database": os.environ.get("DB_NAME", "shop_live"),
-    "charset": "utf8mb4",
-}
+def _build_db_config():
+    cfg = {
+        "user": os.environ.get("DB_USER", "shop_live"),
+        "password": os.environ.get("DB_PASSWORD", ""),
+        "database": os.environ.get("DB_NAME", "shop_live"),
+        "charset": "utf8mb4",
+    }
+    host = os.environ.get("DB_HOST", "")
+    if host.startswith("/"):
+        cfg["unix_socket"] = host
+    elif host:
+        cfg["host"] = host
+        cfg["port"] = int(os.environ.get("DB_PORT", "3306"))
+    else:
+        cfg["unix_socket"] = "/run/mysqld/mysqld.sock"
+    return cfg
+
+DB = _build_db_config()
 PREFIX = "VYkNzBJ_"
 TOP_N_PER_PRODUCT = 20
 MIN_SUPPORT = 3
